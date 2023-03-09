@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using WebPamyatajka.Data;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,6 +28,11 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Seq("http://localhost:5341")
+    .WriteTo.File("/logs.txt").CreateLogger();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
