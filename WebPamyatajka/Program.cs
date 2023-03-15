@@ -32,7 +32,7 @@ else
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .WriteTo.Seq("http://localhost:5341")
-    .WriteTo.File("/logs.txt").CreateLogger();
+    .WriteTo.File("/logs.log").CreateLogger();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
