@@ -4,9 +4,8 @@ namespace WebPamyatajka.Services;
 
 public interface ISettingsService
 {
-    List<Settings> GetAll();
-    Settings GetById(int id);
+    Settings GetByUserId(int userId);
     Settings Create(Settings settings);
     void Update(Settings settings);
-    void Delete(Settings settings);
+    void DeleteById(int settingsId);
 }
