@@ -7,9 +7,9 @@ namespace WebPamyatajka.Data;
 public class ApplicationDbContext : IdentityDbContext
 {
     public DbSet<Category> Categories { get; set; }
-    public DbSet<Card> Cards { get; set; }
     public DbSet<Settings> Settings { get; set; }
     public DbSet<StudyLog> StudyLogs { get; set; }
+    public DbSet<Card> Cards { get; set; }
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
     {
