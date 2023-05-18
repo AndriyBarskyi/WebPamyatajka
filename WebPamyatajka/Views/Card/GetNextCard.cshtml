@@ -1,0 +1,231 @@
+@model WebPamyatajka.Models.Card?
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+@if (Model == null)
+
+{
+    <style>
+     .no-cards {
+       text-align: center;
+       font-family: Arial, sans-serif;
+       font-size: xx-large;
+     }
+     
+     .pb-3 {
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       height: 82vh;
+     } 
+    </style>
+    <p class="no-cards"> Немає карток для повторення/вивчення.</p>}
+else
+{
+    <div class="buttons-container">
+        <button class="btn btn-success" id="alreadyKnownBtn">Вже відоме</button>
+        <button class="btn btn-success" id="iRememberBtn">Пам'ятаю</button>
+        <div class="card-container">
+            <div class="learn-review-card">
+                <div class="learn-review-card-inner">
+                    <div class="learn-review-card-front">
+                        <p class="learn-review-card-text">@Model.Front</p>
+                    </div>
+                    <div class="learn-review-card-back">
+                        <p class="learn-review-card-text">@Model.Back</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn btn-danger" id="learnBtn">Вивчати</button>
+        <button class="btn btn-danger" id="iDontRememberBtn">Не пам'ятаю</button>
+    </div>
+    
+    <style>
+  .container {
+    max-width: none;
+  }
+
+  .buttons-container {
+    display: flex;
+    flex-direction: row;
+    height: 75vh;
+  }
+
+  .btn {
+    width: 20%;
+    font-size: 24px;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.5);
+  }
+
+  .card-container {
+    width: 60%;
+    perspective: 1000px;
+  }
+
+  .learn-review-card {
+    margin: auto;
+    width: 90%;
+    height: 100%;
+    text-align: center;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 1.0s;
+  }
+
+  .learn-review-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 1.0s;
+    transform-style: preserve-3d;
+  }
+
+  .learn-review-card-front,
+  .learn-review-card-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    box-shadow: 2px 2px 15px rgba(0, 0, 0, 0.6);
+  }
+
+  .learn-review-card-back, .learn-review-card.flipped {
+    transform: rotateX(180deg);
+  }
+
+  .learn-review-card-text {
+    margin: 0;
+    font-size: 24px;
+  }
+  
+    @@media only screen and (max-width: 575px) {
+       .buttons-container {
+         flex-direction: column;
+         justify-content: center;
+       }
+       .btn {
+           width: 96%;
+           margin-top: 10px;
+           height: 50vh;
+       }
+       .card-container {
+         width: 100%;
+       }
+       .learn-review-card {
+         height: 50vh;
+         margin-top: 20px;
+         margin-bottom: 10px;
+       }
+            
+     }
+</style>
+       
+<script>
+  const card = document.querySelector('.learn-review-card');
+  card.addEventListener('click', function () {
+    card.classList.toggle('flipped');
+  });
+  console.log(@Model.Id);
+  
+const params = new URLSearchParams(window.location.search);
+const isLearn = params.get("isLearn");
+if (isLearn === "true") {
+    $("#learnBtn").show();
+    $("#alreadyKnownBtn").show();
+    $("#iRememberBtn").hide();
+    $("#iDontRememberBtn").hide();
+} else {
+    $("#alreadyKnownBtn").hide();
+    $("#learnBtn").hide();
+    $("#iRememberBtn").show();
+    $("#iDontRememberBtn").show();
+}
+    // Bind click events to buttons
+    $('#alreadyKnownBtn').click(function () {
+        markKnown();
+    });
+
+    $('#learnBtn').click(function () {
+        learn();
+    });
+
+    $('#flipBtn').click(function () {
+        flip();
+    });
+
+    $('#iRememberBtn').click(function () {
+        remember();
+    });
+
+    $('#iDontRememberBtn').click(function () {
+        notRemember();
+    });
+
+    // Function to flip the card
+    function flip() {
+        $('.card').toggleClass('flipped');
+    }
+
+    // Function to mark the card as already known
+    function markKnown() {
+        $.ajax({
+            url: '/StudyLog/MarkKnown?cardId=' + @Model.Id,
+            type: 'PUT',
+            error: function () {
+                alert('Не вдалось позначити картку вже відомою.');
+            }
+        });
+        window.location.reload();
+        window.location.reload();
+    }
+
+
+    // Function to mark the card as learned
+    function learn() {
+        $.ajax({
+            url: '/StudyLog/Learn?cardId=' + @Model.Id,
+            type: 'POST',
+            error: function () {
+                alert('Не вдалось розпочати вивчення картки.');
+            }
+        });
+        window.location.reload();
+        window.location.reload();
+    }
+
+    // Function to mark the card as remembered
+    function remember() {
+        $.ajax({
+            url: '/StudyLog/Remember?cardId=' + @Model.Id,
+            type: 'PUT',
+            error: function () {
+                alert('Не вдалось відправити картку для подальшого повторення.');
+            }
+        });
+        window.location.reload();
+        window.location.reload();
+    }
+
+    // Function to mark the card as not remembered
+    function notRemember() {
+        $.ajax({
+            url: '/StudyLog/NotRemember?cardId=' + @Model.Id,
+            type: 'PUT',
+            error: function () {
+                alert('Не вдалось позначити картку не запам\'ятованою.');
+            }
+        });
+        window.location.reload();
+        window.location.reload();
+    }
+</script>
+}

@@ -1,0 +1,419 @@
+@model List<WebPamyatajka.Models.Card>
+
+<div class="container justify-content-center" id="category-cards-modal">
+    <h1>@ViewData["CategoryName"]</h1>
+    <hr/>
+    <div class="button-container text-center">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#add-card-modal" id="add-card-button">
+            <i class="fas fa-plus"></i>
+            Створити картку
+        </button>
+        <button type="button" class="btn btn-primary" 
+        id="rename-category-button">
+                    <i class="fas fa-pen"></i> Перейменувати категорію
+                </button>
+        <button type="button" class="btn btn-danger" id="delete-category-button">
+            <i class="fas fa-trash"></i> Видалити категорію
+        </button>
+    </div>
+    <div class="row">
+        @foreach (var card in Model)
+        {
+            <div class="col-md-3">
+                <div class="card mb-3 box-shadow">
+                    <div class="card-body">
+                        <div class="dropdown" style="position: absolute; top: 0; right: 0;">
+                          <button class="btn btn-link dropdown-toggle" 
+                          type="button" id="cardDropdownMenuButton" 
+                          data-toggle="dropdown" aria-haspopup="true" 
+                          aria-expanded="false" tabindex="0" focus="enable">
+                            <i class="fas fa-ellipsis-h"></i>
+                          </button>
+                          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="cardDropdownMenuButton">
+                            <button class="dropdown-item edit-card" data-id="@card.Id">Редагувати</button>
+                            <button class="dropdown-item move-card" data-id="@card.Id">Перемістити</button>
+                              <button class="dropdown-item reset-progress" data-id="@card.Id">Скинути прогрес вивчення</button>
+                            <button class="dropdown-item delete-card" data-id="@card.Id">Видалити</button>
+                          </div>
+                        </div>
+                        <p class="card-text">@card.Front</p>
+                        <p class="card-text">@card.Back</p>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="modal fade" id="add-card-modal" tabindex="-1" role="dialog" aria-labelledby="add-card-modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createNewCardModalLabel">Створення нової картки</h5>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="front">Слово (термін)</label>
+                        <input type="text" class="form-control" id="front" 
+                        placeholder="Введіть текст для передньої сторони картки">
+                    </div>
+                    <div class="form-group">
+                        <label for="back">Переклад (визначення)</label>
+                        <input type="text" class="form-control" id="back" placeholder="Введіть текст для зворотньої сторони картки">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="close-add-card-modal"
+                        data-dismiss="modal">
+                    Закрити
+                </button>
+                <button type="button" class="btn btn-primary" id="add-card-submit">Зберегти зміни</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="edit-card-modal" tabindex="-1" role="dialog" aria-labelledby="edit-card-modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCardModalLabel">Редагувати</h5>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="edit-front">Слово (термін)</label>
+                        <input type="text" class="form-control" id="edit-front" placeholder="Front">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-back">Переклад (визначення)</label>
+                        <input type="text" class="form-control" id="edit-back" placeholder="Back">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="close-edit-card-modal" data-dismiss="modal">
+                    Закрити
+                </button>
+                <button type="button" class="btn btn-primary" id="edit-card-submit">Зберегти зміни</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rename-category-modal" tabindex="-1" role="dialog" aria-labelledby="rename-category-modal" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="renameCategoryModalLabel">Перейменувати</h5>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="edit-name" placeholder="Назва категорії">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="close-rename-category-modal" data-dismiss="modal">
+                    Закрити
+                </button>
+                <button type="button" class="btn btn-primary" id="rename-category-submit">Зберегти зміни</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script>
+const model = @Html.Raw(Json.Serialize(Model));
+
+$(".dropdown-menu").on("click", function(e) {
+  e.stopPropagation();
+});
+
+const moveCardBtn = document.querySelectorAll('.move-card');
+
+for (let i = 0; i < moveCardBtn.length; i++) {
+    moveCardBtn[i].addEventListener('click', function() {
+        const cardId = $(this).data('id');
+        $.ajax({
+            type: 'GET',
+            url: '/Category',
+            dataType: 'json',
+            success: function(categories) {
+                let categoryOptions = '';
+                for (let i = 0; i < categories.length; i++) {
+                    categoryOptions += '<option value="' + categories[i].id + '">' + categories[i].name + '</option>';
+                }
+                const moveCardModal = `
+                    <div class="modal fade" id="move-card-modal" tabindex="-1" role="dialog" aria-labelledby="move-card-modal" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="moveCardModalLabel">Перемістити картку до категорії</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <form>
+                                        <div class="form-group">
+                                            <label for="category-select">Обрати категорію</label>
+                                            <select class="form-control" id="category-select">
+                                                ${categoryOptions}
+                                            </select>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрити</button>
+                                    <button type="button" class="btn btn-primary" id="move-card-submit">Перемістити</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                $('#category-cards-modal').append(moveCardModal);
+                $('#move-card-modal').modal('show');
+                $('#move-card-submit').on('click', function() {
+                    const categoryId = $('#category-select').val();
+                    console.log(cardId);
+                    $.ajax({
+                        type: 'PATCH',
+                        url: '/Card/Move',
+                        dataType: 'json',
+                        contentType: "application/json; charset=utf-8",
+                        data: JSON.stringify({ Id: cardId, categoryId: categoryId }),
+                        success: function() {
+                            window.location.reload();
+                        },
+                        error: function() {
+                            alert('An error occurred while moving the card.');
+                        }
+                    });
+                });
+            },
+            error: function() {
+                alert('An error occurred while loading the categories.');
+            }
+        });
+    });
+}
+
+const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
+const dropdownMenus = document.querySelectorAll('.dropdown-menu');
+function updateDropdownEventListeners(){
+for (let i = 0; i < dropdownToggles.length; i++) {
+    dropdownToggles[i].addEventListener('click', function() {
+    dropdownMenus[i].classList.toggle('show');
+    });
+    }
+} 
+
+updateDropdownEventListeners();
+
+$(document).ready(function () {
+  // При натисканні на кнопку відкривається модальне вікно
+  $("#add-card-button").click(function () {
+    $("#add-card-modal").modal("show");
+  });
+});
+const addCardModal = new bootstrap.Modal(
+  document.getElementById("add-card-modal")
+);
+const front = document.getElementById("front");
+const back = document.getElementById("back");
+const urlParams = new URLSearchParams(window.location.search);
+const categoryId = parseInt(urlParams.get("categoryId"));
+const closeModalButton = document.getElementById("close-add-card-modal");
+
+$('#delete-category-button').click(function () {
+    if (confirm("Are you sure you want to delete this category?")) {
+        $.ajax({
+            url: '/Category/Delete/' + categoryId,
+            type: 'DELETE',
+            success: function () {
+                window.location.href = '/';
+            },
+            error: function () {
+                alert('Error deleting the category.');
+            }
+        });
+    }
+});
+
+$(document).ready(function () {
+  // визначаємо функцію для обробки кліку на кнопку "Перейменувати категорію"
+  $("#rename-category-button").on("click", function () {
+    $("#rename-category-modal").modal("show"); // відкриваємо модальне вікно
+  });
+});
+
+
+// function to rename category
+$(document).ready(function () {
+  // визначаємо функцію для обробки кліку на кнопку "Зберегти зміни"
+  $("#rename-category-submit").on("click", function () {
+    const newName = $("#edit-name").val(); // отримуємо нову назву категорії з форми
+    const categoryId = parseInt(urlParams.get("categoryId"));
+
+    // відправляємо AJAX-запит на сервер
+    $.ajax({
+      type: "PATCH",
+      url: "/Category/Rename" ,
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      data: JSON.stringify({ id: categoryId, name: newName }),
+      success: function () {
+        // якщо запит був успішним, оновлюємо сторінку
+        $("#edit-name").val("");
+        $("#rename-category-modal").modal("hide");
+        window.location.reload();
+      },
+      error: function (xhr, status, error) {
+          console.log("Помилка під час перейменування категорії: " + error);
+      }
+    });
+  });
+});
+
+$(document).ready(function () {
+  // визначаємо функцію для обробки кліку на кнопку "Закрити"
+    $("#close-rename-category-modal").on("click", function () {
+    $("#edit-name").val("");
+    $("#rename-category-modal").modal("hide"); // закриваємо модальне вікно
+  });
+});
+
+
+closeModalButton.addEventListener("click", () => {
+  front.value = "";
+  back.value = "";
+  $("#add-card-modal").modal("hide");
+});
+// Обробник події натискання на кнопку збереження картки
+$("#add-card-submit").click(function () {
+  const front = $("#front").val();
+  const back = $("#back").val();
+
+  // Перевіряємо, чи заповнені всі поля
+  if (front === "" || back === "") {
+    alert("Будь ласка, заповніть всі поля!");
+    return;
+  }
+
+  // Відправляємо дані на сервер для збереження у базу даних
+  $.ajax({
+    url: "/Card/Create",
+    type: "POST",
+    dataType: "json",
+    contentType: "application/json; charset=utf-8",
+    data: JSON.stringify({
+      front: front,
+      back: back,
+      categoryId: categoryId,
+    }),
+    success: function (data) {
+      $("#front").val("");
+      $("#back").val("");
+      $("#add-card-modal").modal("hide");
+
+      // Оновлюємо сторінку
+      window.location.reload();
+    },
+    error: function (xhr, ajaxOptions, thrownError) {
+      alert("Error while adding card: " + thrownError + categoryId);
+    },
+  });
+});
+
+$(".edit-card").click(function () {
+    // Get the ID of the card being edited
+    const cardId = $(this).data("id");
+    // Find the card with the corresponding ID in the model
+    const card = model.find(function (c) { return c.id === cardId; });
+    
+    // Populate the fields of the edit card modal with the values of the card being edited
+    $("#edit-front").val(card.front);
+    $("#edit-back").val(card.back);
+
+    // Show the edit card modal
+    $("#edit-card-modal").modal("show");
+});
+
+// Обробник події натискання на кнопку видалення картки
+$('.reset-progress').click(function () {
+const cardId = $(this).data('id');
+if (confirm('Ви справді хочете скинути прогрес вивчення картки?')) {
+    // Відправляємо запит на видалення картки
+    $.ajax({
+        url: '/StudyLog/Delete?cardId=' + cardId,
+        type: 'DELETE',
+        success: function () {
+            window.location.reload();
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert('Помилка під час скидання прогресу: ' + thrownError);
+        }
+    });
+
+}
+for (const dropdownMenu of dropdownMenus) {
+    dropdownMenu.classList.toggle('close');
+}
+});
+
+const closeEditModalButton = document.getElementById("close-edit-card-modal");
+
+closeEditModalButton.addEventListener("click", () => {
+  $("#edit-card-modal").modal("hide");
+});
+
+$("#edit-card-submit").click(function () {
+    const cardId = $(".edit-card").data("id");
+    const front = $("#edit-front").val();
+    const back = $("#edit-back").val();
+
+    // Send an AJAX request to update the card in the database
+    $.ajax({
+        url: "/Card/Update",
+        type: "PATCH",
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify({ Id: cardId, Front: front, Back: back }),
+        success: function () {
+            // Refresh the page to show the updated card
+            window.location.reload();
+            updateDropdownEventListeners();
+        },
+        error: function (xhr, status, error) {
+            console.log("Помилка під час оновлення картки: " + error);
+        }
+    });
+});
+
+// Обробник події натискання на кнопку видалення картки
+$('.delete-card').click(function () {
+const cardId = $(this).data('id');
+if (confirm('Ви справді хочете видалити цю картку?')) {
+    // Відправляємо запит на видалення картки
+    $.ajax({
+        url: '/Card/Delete?id=' + cardId,
+        type: 'DELETE',
+        success: function () {
+            window.location.reload();
+        },
+        error: function (xhr, ajaxOptions, thrownError) {
+            alert('Помилка під час видалення картки: ' + thrownError);
+        }
+    });
+}
+for (const dropdownMenu of dropdownMenus) {
+    dropdownMenu.classList.toggle('close');
+}
+});
+</script>
