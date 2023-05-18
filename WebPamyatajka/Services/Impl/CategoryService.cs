@@ -18,12 +18,12 @@ public class CategoryService : ICategoryService
 
     public List<Category> GetAllByCreatorIdOrDefault()
     {
-        if (_httpContextAccessor.HttpContext == null)
+        var userId = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null)
         {
             return _context.Categories.Where(c => c.IsDefault).ToList();
         }
 
-        var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         return _context.Categories.Where(c => c.CreatorId == userId).ToList();
     }
 

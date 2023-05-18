@@ -62,7 +62,7 @@
         fetch("/Card/Count?categoryId=" + category.id)
           .then(response => response.json())
           .then(data => {
-            text.textContent = ${data} cards;
+            text.textContent = `${data} карток(ки)`;
           })
           .catch(error => {
             console.error(error);
@@ -77,6 +77,7 @@
             event.stopPropagation();
             window.location.href = `/Card/GetNextCard?categoryId=${category.id}&isLearn=true`;
         });
+
         reviewButton.addEventListener("click", (event) => {
             event.stopPropagation();
             window.location.href = `/Card/GetNextCard?categoryId=${category.id}&isLearn=false`;

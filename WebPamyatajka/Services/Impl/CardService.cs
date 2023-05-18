@@ -25,7 +25,6 @@ public class CardService : ICardService
             .FindAll(c => c.CategoryId.Equals(categoryId));
     }
 
-
     public int CountCards(int categoryId)
     {
         return (_context.Cards.ToList().FindAll(c => c.CategoryId.Equals

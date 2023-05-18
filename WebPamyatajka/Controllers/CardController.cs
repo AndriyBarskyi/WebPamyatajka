@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
 using WebPamyatajka.Models;
 using WebPamyatajka.Services;
@@ -18,10 +17,6 @@ public class CardController : Controller
         _categoryService = categoryService;
     }
 
-    public int Count(int categoryId)
-    {
-        return _cardService.CountCards(categoryId);
-    }
 
     // GET: Card/Cards/5
     public IActionResult Cards(int categoryId)
@@ -31,6 +26,18 @@ public class CardController : Controller
         return View(_cardService.GetAll(categoryId));
     }
 
+    // GET: Card/Create
+    [HttpPost]
+    public ActionResult<Card> Create([FromBody] Card card)
+    {
+        var addedCard = _cardService.Create(card);
+        return Ok(addedCard);
+    }
+
+    public int Count(int categoryId)
+    {
+        return _cardService.CountCards(categoryId);
+    }
     public IActionResult GetNextCard(int categoryId, bool isLearn)
     {
         Card? card;
@@ -45,14 +52,6 @@ public class CardController : Controller
     public List<Card> GetCardsByCategoryId(int categoryId)
     {
         return _cardService.GetAll(categoryId);
-    }
-
-    // GET: Card/Create
-    [HttpPost]
-    public ActionResult<Card> Create([FromBody] Card card)
-    {
-        var addedCard = _cardService.Create(card);
-        return Ok(addedCard);
     }
 
     [HttpDelete]
