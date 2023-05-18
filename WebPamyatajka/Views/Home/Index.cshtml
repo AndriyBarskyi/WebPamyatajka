@@ -2,7 +2,132 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+      <h1 class="text-center mb-4">Вивчайте нові слова/терміни</h1>
+      <button id="add-category" href="#" class="btn btn-primary btn-block mb-4" 
+      data-toggle="modal" data-target="#add-category-modal">Створити категорію</button>
+ </div>
+  </div>
+  <div class="row text-center" id="category-container">
+    @await Html.PartialAsync("_CategoryCard")
+  </div>
 </div>
+
+<!-- Modal for adding new category -->
+<div class="modal fade" id="add-category-modal" tabindex="-1" role="dialog" aria-labelledby="add-category-modal-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="add-category-modal-label">Додати категорію</h5>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="category-title-input">Назва</label>
+                        <input type="text" class="form-control" id="category-title-input" placeholder="Enter category title">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" 
+                data-dismiss="modal" 
+                id="close-add-category-modal">Закрити</button>
+                <button type="button" class="btn btn-primary" id="add-category-button">Підтвердити</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+  // Код для додавання плиток з категоріями
+  const categoryContainer = document.getElementById("category-container");
+  const categoryCardTemplate = document.getElementById("category-card");
+
+  fetch("/Category")
+    .then(response => response.json())
+    .then(categories => {
+      categories.forEach(category => {
+        const card = categoryCardTemplate.content.cloneNode(true);
+        const title = card.querySelector(".card-title");
+        const text = card.querySelector(".card-text");
+        const learnButton = card.querySelector(".btn-primary");
+        const reviewButton = card.querySelector(".btn-secondary");
+  
+        title.textContent = category.name;
+        fetch("/Card/Count?categoryId=" + category.id)
+          .then(response => response.json())
+          .then(data => {
+            text.textContent = ${data} cards;
+          })
+          .catch(error => {
+            console.error(error);
+          });
+           // При натисканні на категорію відкриваємо Cards.cshtml з параметром categoryId
+           card.querySelector(".card").addEventListener("click", () => {
+            window.location.href = "/Card/Cards?categoryId=" + category.id;
+           });
+        learnButton.textContent = "Вивчати нові";
+        reviewButton.textContent = "Повторювати";
+        learnButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            window.location.href = `/Card/GetNextCard?categoryId=${category.id}&isLearn=true`;
+        });
+        reviewButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            window.location.href = `/Card/GetNextCard?categoryId=${category.id}&isLearn=false`;
+        });
+        categoryContainer.appendChild(card);
+    });
+  });
+  
+  // Код для додавання нової категорії
+  const addNewCategoryButton = document.getElementById("add-category");
+  const addCategoryModal = new bootstrap.Modal(document.getElementById("add-category-modal"));
+  const closeModalButton = document.getElementById("close-add-category-modal");
+  
+  closeModalButton.addEventListener("click", () => {
+      categoryTitleInput.value = "";
+      addCategoryModal.hide();
+    });
+  
+  addNewCategoryButton.addEventListener("click", () => {
+      addCategoryModal.show();
+  });
+  
+  const addCategoryButton = document.getElementById("add-category-button");
+  const categoryTitleInput = document.getElementById("category-title-input");
+  
+  addCategoryButton.addEventListener("click", () => {
+      const categoryTitle = categoryTitleInput.value.trim();
+      if (categoryTitle !== "") {
+          fetch("/Category/Create", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                  name: categoryTitle
+              })
+          })
+          .then(response => {
+              if (response.ok) {
+                  return response.json();
+              } else {
+                  throw new Error("Не вдалося створити категорію.");
+              }
+          })
+          .then(() => {
+              location.reload();
+          })
+          .catch(error => {
+              console.error(error);
+          });
+      }
+  });
+
+</script>
