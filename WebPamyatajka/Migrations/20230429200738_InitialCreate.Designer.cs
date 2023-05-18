@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using WebPamyatajka.Data;
 
 #nullable disable
 
-namespace WebPamyatajka.Data.Migrations
+namespace WebPamyatajka.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230429200738_InitialCreate")]
+    partial class InitialCreate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -232,18 +235,18 @@ namespace WebPamyatajka.Data.Migrations
 
                     b.Property<string>("Back")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
 
                     b.Property<int>("CategoryId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Front")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CategoryId");
 
                     b.ToTable("Cards");
                 });
@@ -256,44 +259,50 @@ namespace WebPamyatajka.Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("CreatorId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<bool>("IsDefault")
                         .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
 
                     b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("WebPamyatajka.Models.Settings", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
 
                     b.Property<int>("CardsPerDay")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("IsDarkTheme")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Language")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<DateTime>("ReminderTime")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Theme")
-                        .IsRequired()
+                    b.Property<string>("UserId")
                         .HasColumnType("text");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Settings");
                 });
@@ -312,14 +321,18 @@ namespace WebPamyatajka.Data.Migrations
                     b.Property<bool>("IsKnown")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsLearnt")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("LastViewedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("NextViewAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -377,15 +390,24 @@ namespace WebPamyatajka.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("WebPamyatajka.Models.Card", b =>
+            modelBuilder.Entity("WebPamyatajka.Models.Category", b =>
                 {
-                    b.HasOne("WebPamyatajka.Models.Category", "Category")
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "Creator")
                         .WithMany()
-                        .HasForeignKey("CategoryId")
+                        .HasForeignKey("CreatorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("WebPamyatajka.Models.Settings", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

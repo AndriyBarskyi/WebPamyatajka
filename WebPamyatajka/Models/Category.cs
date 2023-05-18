@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
 
 namespace WebPamyatajka.Models;
@@ -10,8 +11,10 @@ public class Category
     [Required]
     [StringLength(40)]
     public string Name { get; set; }
-    [DefaultValue(true)]
+    [DefaultValue(false)]
     public bool IsDefault { get; set; }
-    [Required]
+    [Required] 
+    public string CreatorId;
+    [ForeignKey("CreatorId")]
     public IdentityUser Creator { get; set; }
 }

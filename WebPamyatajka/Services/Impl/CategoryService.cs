@@ -1,4 +1,6 @@
-﻿using WebPamyatajka.Data;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
+using WebPamyatajka.Data;
 using WebPamyatajka.Models;
 
 namespace WebPamyatajka.Services.Impl;
@@ -6,30 +8,45 @@ namespace WebPamyatajka.Services.Impl;
 public class CategoryService : ICategoryService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public CategoryService(ApplicationDbContext context)
+    public CategoryService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
     {
         _context = context;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public List<Category> GetAll()
+    public List<Category> GetAllByCreatorIdOrDefault()
     {
-        return _context.Categories.ToList();
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return _context.Categories.Where(c => c.IsDefault).ToList();
+        }
+
+        var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return _context.Categories.Where(c => c.CreatorId == userId).ToList();
     }
 
     public Category GetById(int id)
     {
-        Category category = _context.Categories.First(c => c.Id == id);
-        CheckIfCategoryExists(category);
-        return category;
-    }
+        if (id < 1)
+        {
+            throw new ArgumentException("Id must be greater than zero.");
+        }
 
-    private static void CheckIfCategoryExists(Category category)
-    {
+        if (_httpContextAccessor.HttpContext == null)
+        {
+            return _context.Categories.FirstOrDefault(c => c.IsDefault);
+        }
+
+        var userId = _httpContextAccessor.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        Category category = _context.Categories.FirstOrDefault(c => c.Id == id && c.CreatorId == userId);
         if (category == null)
         {
-            throw new ArgumentException(nameof(category));
+            category = _context.Categories.FirstOrDefault(c => c.Id == id && c.IsDefault);
         }
+
+        return category;
     }
 
     public Category Create(Category category)
@@ -38,18 +55,21 @@ public class CategoryService : ICategoryService
         {
             throw new ArgumentNullException(nameof(category));
         }
-
-        if (_context.Categories.Find() == category)
+        HttpContext? httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext == null)
         {
-            throw new ArgumentException("Such category already exists:", nameof
-            (category));
+            category.IsDefault = true;
         }
-        
         if (string.IsNullOrEmpty(category.Name))
         {
             throw new ArgumentException("Name of the category is required.");
         }
 
+        var userId = httpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (userId != null)
+        {
+            category.CreatorId = userId;
+        }
         _context.Categories.Add(category);
         _context.SaveChanges();
         return category;
@@ -76,5 +96,13 @@ public class CategoryService : ICategoryService
         Category category = GetById(categoryId);
         _context.Categories.Remove(category);
         _context.SaveChanges();
+    }
+
+    public Category Rename(Category category)
+    {
+        Category oldCategory = GetById(category.Id);
+        oldCategory.Name = category.Name;
+        Update(oldCategory);
+        return oldCategory;
     }
 }

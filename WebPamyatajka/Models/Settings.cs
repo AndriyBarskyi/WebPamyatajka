@@ -6,7 +6,7 @@ namespace WebPamyatajka.Models;
 
 public class Settings
 {
-    public int Id { get; set; }
+    public string Id { get; set; }
     public IdentityUser User { get; set; }
     [DefaultValue(false)]
     public bool IsDarkTheme { get; set; }
