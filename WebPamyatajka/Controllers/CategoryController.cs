@@ -1,31 +1,52 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebPamyatajka.Models;
+using WebPamyatajka.Services;
 
-namespace WebPamyatajka.Controllers;
-
-public class HomeController : Controller
+namespace WebPamyatajka.Controllers
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger)
+    public class CategoryController : Controller
     {
-        _logger = logger;
-    }
+        private readonly ICategoryService _categoryService;
 
-    public IActionResult Index()
-    {
-        return View();
-    }
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
+        public CategoryController(ICategoryService categoryService)
+        {
+            _categoryService = categoryService;
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+        // GET: Category
+
+        [HttpGet]
+        public List<Category> Index()
+        {
+            return _categoryService.GetAllByCreatorIdOrDefault();
+        }
+
+        [HttpPost]
+        public ActionResult<Category> Create([FromBody] Category category)
+        {
+
+            var addedCategory = _categoryService.Create(category);
+            return Ok(addedCategory);
+        }
+
+        [HttpDelete]
+        public IActionResult Delete(int id)
+        {
+            _categoryService.DeleteById(id);
+            return Ok();
+        }
+
+        [HttpPatch]
+        public ActionResult<Category> Rename([FromBody] Category category)
+        {
+            return Ok(_categoryService.Rename(category));
+        }
     }
 }

@@ -1,93 +1,78 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc;
+using WebPamyatajka.Models;
+using WebPamyatajka.Services;
 
-namespace WebPamyatajka.Controllers
+namespace WebPamyatajka.Controllers;
+
+public class CardController : Controller
 {
-    public class CardController : Controller
+    private readonly ICardService _cardService;
+    private readonly ICategoryService _categoryService;
+    
+
+    public CardController(ICardService cardService, ICategoryService
+        categoryService)
     {
-        // GET: Card
-        public ActionResult Index()
-        {
-            return View();
-        }
+        _cardService = cardService;
+        _categoryService = categoryService;
+    }
 
-        // GET: Card/Details/5
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
+    public int Count(int categoryId)
+    {
+        return _cardService.CountCards(categoryId);
+    }
 
-        // GET: Card/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
+    // GET: Card/Cards/5
+    public IActionResult Cards(int categoryId)
+    {
+        var category = _categoryService.GetById(categoryId);
+        ViewData["CategoryName"] = category.Name;
+        return View(_cardService.GetAll(categoryId));
+    }
 
-        // POST: Card/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add insert logic here
+    public IActionResult GetNextCard(int categoryId, bool isLearn)
+    {
+        Card? card;
+        card = isLearn
+            ? _cardService.GetNextCardToLearn(categoryId)
+            : _cardService.GetNextCardForReview(categoryId);
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+        return card != null ? View(card) : View();
+    }
 
-        // GET: Card/Edit/5
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
+    [HttpGet]
+    public List<Card> GetCardsByCategoryId(int categoryId)
+    {
+        return _cardService.GetAll(categoryId);
+    }
 
-        // POST: Card/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add update logic here
+    // GET: Card/Create
+    [HttpPost]
+    public ActionResult<Card> Create([FromBody] Card card)
+    {
+        var addedCard = _cardService.Create(card);
+        return Ok(addedCard);
+    }
 
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+    [HttpDelete]
+    public IActionResult Delete(int id)
+    {
+        _cardService.DeleteById(id);
+        return Ok();
+    }
 
-        // GET: Card/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
+    [HttpPatch]
+    public IActionResult Update([FromBody] Card card)
+    {
+        var updatedCard = _cardService.Update(card);
+        return Ok(updatedCard);
+    }
 
-        // POST: Card/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                // TODO: Add delete logic here
-
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
+    [HttpPatch]
+    public IActionResult Move([FromBody] Card card)
+    {
+        var movedCard = _cardService.Move(card);
+        return Ok(movedCard);
     }
 }
